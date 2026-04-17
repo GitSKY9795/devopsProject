@@ -3,6 +3,7 @@ const wrapAsync = require("../utils/wrapAsync");
 const router = express.Router();
 const passport = require("passport");
 const saveRedirectUrl = require("../middleware/saveRedirectUrl");
+const ensureDbConnected = require("../middleware/ensureDbConnected");
 const { signup, login, logout, signupForm, userLoginForm, adminLoginForm, authChoice } = require("../controllers/user.js");
 
 router.get("/", authChoice);
@@ -13,6 +14,7 @@ router.get("/signup", signupForm);
 
 router.post(
   "/signup",
+  ensureDbConnected,
   wrapAsync(signup),
 );
 
@@ -24,6 +26,7 @@ router.get("/admin/login", adminLoginForm);
 //passport resets sessions so we have to save them in locals
 router.post(
   "/user/login", saveRedirectUrl,
+  ensureDbConnected,
   passport.authenticate("local", {
     failureRedirect: "/user/login",
     failureFlash: true,
@@ -33,6 +36,7 @@ router.post(
 
 router.post(
   "/admin/login", saveRedirectUrl,
+  ensureDbConnected,
   passport.authenticate("local", {
     failureRedirect: "/admin/login",
     failureFlash: true,

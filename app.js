@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
+mongoose.set("bufferCommands", false);
 const path = require("node:path");
 const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
@@ -11,9 +12,6 @@ const flash = require("connect-flash");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const User = require("./models/user.js");
-const saveRedirectUrl = require("./middleware/saveRedirectUrl.js");
-const wrapAsync = require("./utils/wrapAsync.js");
-const { userLoginForm, adminLoginForm, login: roleLogin } = require("./controllers/user.js");
 
 
 
@@ -26,11 +24,22 @@ const mongoURL = process.env.MONGO_URL || "mongodb://127.0.0.1:27017/devopsproje
 const port = Number(process.env.PORT) || 8080;
 
 main()
-    .then(() => console.log("Connection Successful"))
-    .catch(err => console.log(err));
+    .then(() => {
+        console.log("Connection Successful");
+        app.listen(port, () => {
+            console.log(`Server listening on port ${port}`);
+        });
+    })
+    .catch((err) => {
+        console.error("MongoDB connection failed:", err.message);
+        process.exit(1);
+    });
 
 async function main() {
-    await mongoose.connect(mongoURL);
+    await mongoose.connect(mongoURL, {
+        serverSelectionTimeoutMS: 20000,
+        socketTimeoutMS: 45000,
+    });
 }
 
 app.set("view engine", "ejs");
@@ -79,29 +88,6 @@ app.get("/", (req, res) => {
     res.redirect("/listings");
 });
 
-app.get("/user/login", userLoginForm);
-app.get("/admin/login", adminLoginForm);
-
-app.post(
-    "/user/login",
-    saveRedirectUrl,
-    passport.authenticate("local", {
-        failureRedirect: "/user/login",
-        failureFlash: true,
-    }),
-    wrapAsync(roleLogin("user")),
-);
-
-app.post(
-    "/admin/login",
-    saveRedirectUrl,
-    passport.authenticate("local", {
-        failureRedirect: "/admin/login",
-        failureFlash: true,
-    }),
-    wrapAsync(roleLogin("admin")),
-);
-
 app.use("/listings", listingsRouter);
 app.use("/listings/:id/reviews", reviewsRouter);
 app.use("/", usersRouter);
@@ -114,8 +100,4 @@ app.use((req, res, next) => {
 app.use((err, req, res, next) => {
     let { statusCode = 500 } = err;
     res.status(statusCode).render("error.ejs", { err });
-});
-
-app.listen(port, () => {
-    console.log(`Server listening on port ${port}`);
 });
