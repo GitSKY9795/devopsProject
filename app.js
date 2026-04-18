@@ -23,22 +23,28 @@ const usersRouter = require("./routes/user.js")
 const mongoURL = process.env.MONGO_URL || "mongodb://127.0.0.1:27017/devopsproject";
 const port = Number(process.env.PORT) || 8080;
 
-main()
-    .then(() => {
-        console.log("Connection Successful");
-        app.listen(port, () => {
-            console.log(`Server listening on port ${port}`);
-        });
-    })
-    .catch((err) => {
-        console.error("MongoDB connection failed:", err.message);
-        process.exit(1);
-    });
+let server;
 
-async function main() {
+async function connectDB() {
     await mongoose.connect(mongoURL, {
         serverSelectionTimeoutMS: 20000,
         socketTimeoutMS: 45000,
+    });
+}
+
+async function startServer() {
+    await connectDB();
+    console.log("Connection Successful");
+    server = app.listen(port, () => {
+        console.log(`Server listening on port ${port}`);
+    });
+    return server;
+}
+
+if (require.main === module) {
+    startServer().catch((err) => {
+        console.error("MongoDB connection failed:", err.message);
+        process.exit(1);
     });
 }
 
@@ -101,3 +107,5 @@ app.use((err, req, res, next) => {
     let { statusCode = 500 } = err;
     res.status(statusCode).render("error.ejs", { err });
 });
+
+module.exports = { app, connectDB, startServer };
