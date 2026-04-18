@@ -2,9 +2,11 @@ name: CI/CD Pipeline - Tests
 
 on:
   push:
-    branches: [ main, develop ]
+    branches:
+      - "*"
   pull_request:
-    branches: [ main, develop ]
+    branches:
+      - "*"
 
 jobs:
   test:
@@ -82,15 +84,9 @@ jobs:
 
     - name: SonarQube Scan
       uses: SonarSource/sonarqube-scan-action@v6
-      if: ${{ secrets.SONAR_TOKEN != '' }}
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      if: ${{ env.SONAR_TOKEN }}
 
     - name: SonarQube Quality Gate
       uses: SonarSource/sonarqube-quality-gate-action@v1.2.0
       timeout-minutes: 5
-      if: ${{ secrets.SONAR_TOKEN != '' }}
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      if: ${{ env.SONAR_TOKEN }}
