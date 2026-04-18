@@ -1,4 +1,4 @@
-# CI/CD Pipeline Setup Guide
+# CI/CD Pipeline Setup Guide:
 
 ## Overview
 This project now includes a complete CI/CD pipeline using GitHub Actions for automated testing and security audits.
