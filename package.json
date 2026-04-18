@@ -10,7 +10,8 @@
     "test": "jest --detectOpenHandles",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:ci": "jest --ci --coverage --config jest.ci.config.js"
+    "test:ci": "jest --ci --coverage --config jest.ci.config.js",
+    "sonar:scan": "npx sonar-scanner"
   },
   "keywords": [],
   "author": "",
