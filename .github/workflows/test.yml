@@ -139,5 +139,5 @@ jobs:
       - name: Trigger Auto Scaling Instance Refresh
         run: |
           aws autoscaling start-instance-refresh \
-          --auto-scaling-group-name my-app-asg \
+          --auto-scaling-group-name my-app-sg \
           --region ap-south-1
