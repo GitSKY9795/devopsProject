@@ -124,3 +124,38 @@ jobs:
 
       - name: Push to ECR
         run: docker push ${{ secrets.ECR_REPO_URI }}:latest
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+
+          script: |
+            echo "🚀 Deploying latest image..."
+
+            # Login to ECR
+            aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${{ secrets.ECR_REPO_URI }}
+
+            # Pull latest image
+            docker pull ${{ secrets.ECR_REPO_URI }}:latest
+
+            # Stop & remove old container
+            docker stop app || true
+            docker rm app || true
+
+            # Run new container
+            docker run -d -p 80:8080 \
+            --name app \
+            --network mynet \
+            --restart always \
+            -e MONGO_URL="mongodb://mongo:27017/devopsproject" \
+            -e SESSION_SECRET="secret" \
+            ${{ secrets.ECR_REPO_URI }}:latest
+
+            echo "✅ Deployment complete!"
